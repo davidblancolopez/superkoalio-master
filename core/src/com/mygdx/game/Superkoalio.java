@@ -34,9 +34,9 @@ public class Superkoalio extends ApplicationAdapter {
 	static class Koala {
 		static float WIDTH;
 		static float HEIGHT;
-		static float MAX_VELOCITY = 15f;
-		static float JUMP_VELOCITY = 37f;
-		static float DAMPING = 0.87f;
+		static float MAX_VELOCITY = 10f;//10f
+		static float JUMP_VELOCITY = 40f;//40f
+		static float DAMPING = 0.0f;//0.87f
 
 		enum State {
 			Standing, Walking, Jumping
@@ -58,6 +58,8 @@ public class Superkoalio extends ApplicationAdapter {
 	private Animation<TextureRegion> walk;
 	private Animation<TextureRegion> jump;
 	private Koala koala;
+
+	private int vidas = 3;
 	private Pool<Rectangle> rectPool = new Pool<Rectangle>() {
 		@Override
 		protected Rectangle newObject () {
@@ -66,9 +68,9 @@ public class Superkoalio extends ApplicationAdapter {
 	};
 	private Array<Rectangle> tiles = new Array<Rectangle>();
 
-	private static final float GRAVITY = -2.5f;
+	private static final float GRAVITY = -2.5f;//-2.5
 
-	private boolean debug = false;
+	private boolean debug = true;
 	private ShapeRenderer debugRenderer;
 
 	@Override
@@ -89,7 +91,7 @@ public class Superkoalio extends ApplicationAdapter {
 
 		// load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
 		map = new TmxMapLoader().load("level1.tmx");
-		renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
+		renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);//16f
 
 		// create an orthographic camera, shows us 30x20 units of the world
 		camera = new OrthographicCamera();
@@ -98,7 +100,7 @@ public class Superkoalio extends ApplicationAdapter {
 
 		// create the Koala we want to move around the world
 		koala = new Koala();
-		koala.position.set(20, 20);
+		koala.position.set(20, 3);
 
 		debugRenderer = new ShapeRenderer();
 	}
@@ -245,8 +247,24 @@ public class Superkoalio extends ApplicationAdapter {
 		if (koala.position.y <= 0)
 		{
 			Gdx.app.log ("muerte", "Koala Dead");
+
+			muerteKoala();
+
 		}
 
+	}
+
+	/**
+	 * Metodo que se ejecuta al morir el koala.
+	 * resta 1 vida al jugador y comprueba que aun puede jugar o no.
+	 */
+	private void muerteKoala(){
+		vidas--;
+		if (vidas > 0) {
+			koala.position.set(20, 3);
+		}else{
+
+		}
 	}
 
 	private boolean isTouched (float startX, float endX) {
@@ -262,9 +280,23 @@ public class Superkoalio extends ApplicationAdapter {
 	}
 
 	private void getTiles (int startX, int startY, int endX, int endY, Array<Rectangle> tiles) {
+
+
 		TiledMapTileLayer layer = (TiledMapTileLayer)map.getLayers().get("walls");
+		TiledMapTileLayer layerIrrompible = (TiledMapTileLayer)map.getLayers().get("NO_rompible");
 		rectPool.freeAll(tiles);
 		tiles.clear();
+
+		declararObjetosColisiones(layer,tiles,startX,startY,endY,endX);
+		declararObjetosColisiones(layerIrrompible,tiles,startX,startY,endY,endX);
+
+
+
+	}
+
+	private void declararObjetosColisiones(TiledMapTileLayer layer, Array<Rectangle> tiles, int startX, int startY, int endY, int endX) {
+
+
 		for (int y = startY; y <= endY; y++) {
 			for (int x = startX; x <= endX; x++) {
 				Cell cell = layer.getCell(x, y);
@@ -275,6 +307,7 @@ public class Superkoalio extends ApplicationAdapter {
 				}
 			}
 		}
+
 	}
 
 	private void renderKoala (float deltaTime) {
@@ -314,6 +347,18 @@ public class Superkoalio extends ApplicationAdapter {
 
 		debugRenderer.setColor(Color.YELLOW);
 		TiledMapTileLayer layer = (TiledMapTileLayer)map.getLayers().get("walls");
+		TiledMapTileLayer layerIrrompible = (TiledMapTileLayer)map.getLayers().get("NO_rompible");
+
+		debugRomper(layer);
+
+		debugRomper(layerIrrompible);
+
+
+		debugRenderer.end();
+	}
+
+	private void debugRomper(TiledMapTileLayer layer) {
+
 		for (int y = 0; y <= layer.getHeight(); y++) {
 			for (int x = 0; x <= layer.getWidth(); x++) {
 				Cell cell = layer.getCell(x, y);
@@ -323,7 +368,6 @@ public class Superkoalio extends ApplicationAdapter {
 				}
 			}
 		}
-		debugRenderer.end();
 	}
 
 	@Override
